@@ -3,11 +3,12 @@ import Link from 'next/link';
 const ahus = [
   { id: 'AHU1', airflow: 12000, temp: 18.5, speed: 0.4, status: '正常' },
   { id: 'AHU2', airflow: 18000, temp: 19.1, speed: 0.5, status: '正常' },
-  { id: 'AHU3', airflow: 23000, temp: 17.8, speed: 0.6, status: '需注意' },
-  { id: 'AHU4', airflow: 20000, temp: 18.0, speed: 0.55, status: '正常' },
+  { id: 'AHU3', airflow: 23000, temp: 17.8, speed: 0.6, status: '正常' },
+  { id: 'AHU4', airflow: 20000, temp: 18.0, speed: 0.55, status: '需注意' }, // ⚠️ 改為警告
   { id: 'AHU5', airflow: 15000, temp: 19.3, speed: 0.45, status: '正常' },
-  { id: 'AHU6', airflow: 16000, temp: 18.8, speed: 0.35, status: '異常' },
+  { id: 'AHU6', airflow: 16000, temp: 18.8, speed: 0.35, status: '需注意' }, // ⚠️ 改為警告
 ];
+
 
 const getStatusColor = (status) => {
   if (status === '正常') return '#4caf50';
