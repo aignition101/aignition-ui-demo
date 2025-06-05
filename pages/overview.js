@@ -1,14 +1,20 @@
 import Link from 'next/link';
+import { useState } from 'react';
 
-const ahus = [
-  { id: 'AHU1', airflow: 12000, temp: 18.5, speed: 0.4, status: '正常' },
-  { id: 'AHU2', airflow: 18000, temp: 19.1, speed: 0.5, status: '正常' },
-  { id: 'AHU3', airflow: 23000, temp: 17.8, speed: 0.6, status: '正常' },
-  { id: 'AHU4', airflow: 20000, temp: 18.0, speed: 0.55, status: '需注意' }, // ⚠️ 改為警告
-  { id: 'AHU5', airflow: 15000, temp: 19.3, speed: 0.45, status: '正常' },
-  { id: 'AHU6', airflow: 16000, temp: 18.8, speed: 0.35, status: '需注意' }, // ⚠️ 改為警告
+const initialAHUs = [
+  { id: 'AHU1', speed: 0.4 },
+  { id: 'AHU2', speed: 0.5 },
+  { id: 'AHU3', speed: 0.6 },
+  { id: 'AHU4', speed: 0.55 },
+  { id: 'AHU5', speed: 0.45 },
+  { id: 'AHU6', speed: 0.35 },
 ];
 
+const getFanWarnings = (id) => {
+  if (id === 'AHU4') return [null, null, '警告 - PCBA過熱 90°C'];
+  if (id === 'AHU6') return ['警告 - 溫度變化大', null];
+  return [];
+};
 
 const getStatusColor = (status) => {
   if (status === '正常') return '#4caf50';
@@ -17,44 +23,67 @@ const getStatusColor = (status) => {
 };
 
 export default function Overview() {
+  const [ahus, setAhus] = useState(initialAHUs);
+
+  const updateSpeed = (index, newSpeed) => {
+    const updated = [...ahus];
+    updated[index].speed = parseFloat(newSpeed);
+    setAhus(updated);
+  };
+
   return (
-    <div style={{ padding: '40px', fontFamily: 'Arial' }}>
+    <div style={{ padding: 40, fontFamily: 'Arial' }}>
       <h1>設備總覽</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
-        {ahus.map((ahu) => (
-          <Link key={ahu.id} href={`/ahu/${ahu.id}`} style={{ textDecoration: 'none' }}>
-            <div
-              style={{
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                padding: '16px',
-                width: '250px',
-                backgroundColor: '#f9f9f9',
-                transition: '0.2s',
-              }}
-            >
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+        {ahus.map((ahu, index) => {
+          const fanWarnings = getFanWarnings(ahu.id);
+          const status = fanWarnings.some(w => w) ? '需注意' : '正常';
+          const airflow = Math.round(ahu.speed * 30000);
+          const power = Math.round(ahu.speed * 4450 * (fanWarnings.length || 3));
+
+          return (
+            <div key={ahu.id} style={{
+              width: 300,
+              border: '1px solid #ccc',
+              borderRadius: 8,
+              padding: 16,
+              backgroundColor: '#f9f9f9'
+            }}>
               <h3>{ahu.id}</h3>
-              <p>風量：{ahu.airflow} CMH</p>
-              <p>出口溫度：{ahu.temp}°C</p>
-              <p>功率：{Math.round(ahu.speed * 4450)} W</p>
+              <p>風量：{airflow} CMH</p>
               <p>轉速比：{Math.round(ahu.speed * 100)}%</p>
-              <div
-                style={{
-                  display: 'inline-block',
-                  padding: '6px 12px',
-                  borderRadius: '16px',
-                  backgroundColor: getStatusColor(ahu.status),
-                  color: '#fff',
-                  fontWeight: 'bold',
-                  fontSize: '12px',
-                }}
-              >
-                {ahu.status}
+              <p>功率：{power} W</p>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={ahu.speed}
+                onChange={(e) => updateSpeed(index, e.target.value)}
+              />
+              <div style={{
+                marginTop: 8,
+                display: 'inline-block',
+                backgroundColor: getStatusColor(status),
+                color: '#fff',
+                padding: '4px 12px',
+                borderRadius: '16px',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                {status}
+              </div>
+              <div style={{ marginTop: 12 }}>
+                <Link href={`/ahu/${ahu.id}`} style={{ fontSize: 14, color: '#0070f3' }}>
+                  查看詳情 →
+                </Link>
               </div>
             </div>
-          </Link>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
+
+
