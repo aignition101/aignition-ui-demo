@@ -19,7 +19,8 @@ const getFanWarnings = (id) => {
 const getStatusColor = (status) => {
   if (status === '正常') return '#4caf50';
   if (status === '需注意') return '#ff9800';
-  return '#f44336';
+  if (status === '故障') return '#f44336';
+  return '#ccc';
 };
 
 export default function Overview() {
@@ -57,7 +58,7 @@ export default function Overview() {
   const updateSpeed = (index, newSpeed) => {
     const updated = [...ahuData];
     updated[index].targetSpeed = parseFloat(newSpeed);
-    updated[index].airflow = Math.round(updated[index].targetSpeed * 40000); // 假設上限
+    updated[index].airflow = Math.round(updated[index].targetSpeed * 40000); // 模擬風量
     setAhuData(updated);
   };
 
@@ -80,13 +81,35 @@ export default function Overview() {
               border: '1px solid #ccc',
               borderRadius: 8,
               padding: 16,
-              backgroundColor: '#fdfdfd'
+              backgroundColor: '#fdfdfd',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
             }}>
-              <h3>{ahu.id}</h3>
-              <p>風量：{airflow} CMH</p>
-              <p>轉速比：{speedPercent}%</p>
-              <p>功率：{power} W</p>
-              <p>出口風溫：{ahu.temp}°C</p>
+              <img src="/ahu-image.png" alt="ahu" style={{
+                width: '100%', height: 120, objectFit: 'cover',
+                borderRadius: 4, marginBottom: 8
+              }} />
+
+              <h3 style={{ marginBottom: 4 }}>{ahu.id}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{
+                  backgroundColor: color,
+                  color: '#fff',
+                  padding: '4px 12px',
+                  borderRadius: '16px',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>{status}</span>
+                <Link href={`/ahu/${ahu.id}`} style={{ fontSize: 14, color: '#0070f3' }}>
+                  查看詳情 →
+                </Link>
+              </div>
+
+              <p style={{ margin: '4px 0' }}>風量：{airflow} CMH</p>
+              <p style={{ margin: '4px 0' }}>出口風溫：{ahu.temp}°C</p>
+              <p style={{ margin: '4px 0' }}>功率：{power} W</p>
+              <p style={{ margin: '4px 0' }}>轉速比：{speedPercent}%</p>
               <input
                 type="range"
                 min="0"
@@ -94,20 +117,31 @@ export default function Overview() {
                 step="0.01"
                 value={ahu.targetSpeed}
                 onChange={(e) => updateSpeed(index, e.target.value)}
+                style={{ width: '100%', marginBottom: 12 }}
               />
-              <div style={{
-                marginTop: 10,
-                backgroundColor: color,
-                color: '#fff',
-                padding: '6px 12px',
-                borderRadius: '16px',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>{status}</div>
-              <div style={{ marginTop: 10 }}>
-                <Link href={`/ahu/${ahu.id}`} style={{ fontSize: 14, color: '#0070f3' }}>
-                  查看詳情 →
-                </Link>
+
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button disabled style={{
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  background: '#ddd',
+                  border: 'none',
+                  color: '#666'
+                }}>排程</button>
+                <button disabled style={{
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  background: '#ddd',
+                  border: 'none',
+                  color: '#666'
+                }}>維護保養</button>
+                <button disabled style={{
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  background: '#ddd',
+                  border: 'none',
+                  color: '#666'
+                }}>數據分析</button>
               </div>
             </div>
           );
