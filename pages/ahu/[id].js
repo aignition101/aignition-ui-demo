@@ -11,6 +11,11 @@ const fanWarnings = {
   AHU6: { 0: '警告 - 溫度變化大' },
 };
 
+const baseSpeeds = {
+  AHU1: 0.51, AHU2: 0.62, AHU3: 0.59,
+  AHU4: 0.63, AHU5: 0.69, AHU6: 0.75,
+};
+
 const getStatusColor = (status) => {
   if (status.includes('正常')) return '#4caf50';
   if (status.includes('警告')) return '#ff9800';
@@ -28,16 +33,10 @@ export default function AhuDetail() {
   const [targetSpeed, setTargetSpeed] = useState(0.5);
 
   useEffect(() => {
-    // 模擬從 parent 帶入的設備速度
-    const simulatedSpeed = {
-      AHU1: 0.4, AHU2: 0.5, AHU3: 0.6,
-      AHU4: 0.55, AHU5: 0.45, AHU6: 0.35,
-    };
-    const newTarget = simulatedSpeed[id] ?? 0.5;
+    const newTarget = baseSpeeds[id] ?? 0.5;
     setTargetSpeed(newTarget);
   }, [id]);
 
-  // 線性動畫模擬
   useEffect(() => {
     const interval = setInterval(() => {
       setSpeed(prev => {
@@ -58,7 +57,20 @@ export default function AhuDetail() {
       {Array.from({ length: fanCount }).map((_, i) => {
         const rpm = Math.round(speed * 2480);
         const power = Math.round(speed * 4450);
-        const hours = id === 'AHU6' ? 125000 + i * 1000 : Math.floor(800 + Math.random() * 5000);
+        let hours;
+        let note = '';
+
+        if (id === 'AHU2') {
+          if (i === 0) hours = 6380;
+          else if (i === 1) {
+            hours = 24;
+            note = '（剛更換）';
+          } else if (i === 2) hours = 6381;
+        } else {
+          const base = Math.floor(3000 + Math.random() * 1000);
+          hours = base + (i % 5);
+        }
+
         const status = warnings[i] || '正常';
         const color = getStatusColor(status);
 
@@ -72,7 +84,8 @@ export default function AhuDetail() {
           }}>
             <h4>Fan {i + 1}</h4>
             <p>型號：K3G450PA3103</p>
-            <p>轉速：{rpm} rpm｜功率：{power} W｜運轉時間：{hours} 小時</p>
+            <p>轉速：{rpm} rpm｜功率：{power} W</p>
+            <p>運轉時間：{hours} 小時 {note}</p>
             <span style={{
               backgroundColor: color,
               color: '#fff',
