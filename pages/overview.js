@@ -1,7 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useState } from 'react';
 
-const initialAHUs = [
+const INIT_DATA = [
   { id: 'AHU1', speed: 0.4 },
   { id: 'AHU2', speed: 0.5 },
   { id: 'AHU3', speed: 0.6 },
@@ -17,29 +17,64 @@ const getFanWarnings = (id) => {
 };
 
 const getStatusColor = (status) => {
-  if (status === '正常') return '#4caf50';
-  if (status === '需注意') return '#ff9800';
-  return '#f44336';
+  if (status === '正常') return '#4caf50';     // 綠
+  if (status === '需注意') return '#ff9800';   // 黃
+  if (status === '故障') return '#f44336';     // 紅
+  return '#ccc';
 };
 
 export default function Overview() {
-  const [ahus, setAhus] = useState(initialAHUs);
+  const [ahuData, setAhuData] = useState(
+    INIT_DATA.map((item) => ({
+      ...item,
+      targetSpeed: item.speed,
+      displayedSpeed: item.speed,
+      fanWarnings: getFanWarnings(item.id),
+    }))
+  );
+
+  const animationRef = useRef();
+
+  // 動畫更新邏輯
+  useEffect(() => {
+    clearInterval(animationRef.current);
+    animationRef.current = setInterval(() => {
+      setAhuData((prev) =>
+        prev.map((ahu) => {
+          if (ahu.displayedSpeed === ahu.targetSpeed) return ahu;
+
+          const diff = ahu.targetSpeed - ahu.displayedSpeed;
+          const step = 0.01; // 每次調整約為6秒/60次 = 0.01
+          const nextSpeed =
+            Math.abs(diff) < step
+              ? ahu.targetSpeed
+              : ahu.displayedSpeed + (diff > 0 ? step : -step);
+
+          return { ...ahu, displayedSpeed: parseFloat(nextSpeed.toFixed(4)) };
+        })
+      );
+    }, 100); // 每100ms更新一次
+    return () => clearInterval(animationRef.current);
+  }, [ahuData]);
 
   const updateSpeed = (index, newSpeed) => {
-    const updated = [...ahus];
-    updated[index].speed = parseFloat(newSpeed);
-    setAhus(updated);
+    const updated = [...ahuData];
+    updated[index].targetSpeed = parseFloat(newSpeed);
+    setAhuData(updated);
   };
 
   return (
     <div style={{ padding: 40, fontFamily: 'Arial' }}>
-      <h1>設備總覽</h1>
+      <h1>設備智能平台</h1>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-        {ahus.map((ahu, index) => {
-          const fanWarnings = getFanWarnings(ahu.id);
-          const status = fanWarnings.some(w => w) ? '需注意' : '正常';
-          const airflow = Math.round(ahu.speed * 30000);
-          const power = Math.round(ahu.speed * 4450 * (fanWarnings.length || 3));
+        {ahuData.map((ahu, index) => {
+          const fanCount = ahu.fanWarnings.length || 3;
+          const speedPercent = Math.round(ahu.displayedSpeed * 100);
+          const airflow = Math.round(ahu.displayedSpeed * 30000);
+          const power = Math.round(ahu.displayedSpeed * 4450 * fanCount);
+          const hasWarning = ahu.fanWarnings.some(w => w);
+          const status = hasWarning ? '需注意' : '正常';
+          const color = getStatusColor(status);
 
           return (
             <div key={ahu.id} style={{
@@ -47,34 +82,34 @@ export default function Overview() {
               border: '1px solid #ccc',
               borderRadius: 8,
               padding: 16,
-              backgroundColor: '#f9f9f9'
+              background: '#fdfdfd'
             }}>
               <h3>{ahu.id}</h3>
               <p>風量：{airflow} CMH</p>
-              <p>轉速比：{Math.round(ahu.speed * 100)}%</p>
               <p>功率：{power} W</p>
+              <p>轉速比：{speedPercent}%</p>
               <input
                 type="range"
                 min="0"
                 max="1"
                 step="0.01"
-                value={ahu.speed}
+                value={ahu.targetSpeed}
                 onChange={(e) => updateSpeed(index, e.target.value)}
               />
               <div style={{
-                marginTop: 8,
-                display: 'inline-block',
-                backgroundColor: getStatusColor(status),
+                marginTop: 10,
+                backgroundColor: color,
                 color: '#fff',
-                padding: '4px 12px',
+                padding: '6px 12px',
                 borderRadius: '16px',
                 fontSize: '12px',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                display: 'inline-block',
               }}>
                 {status}
               </div>
-              <div style={{ marginTop: 12 }}>
-                <Link href={`/ahu/${ahu.id}`} style={{ fontSize: 14, color: '#0070f3' }}>
+              <div style={{ marginTop: 10 }}>
+                <Link href={`/ahu/${ahu.id}`} style={{ color: '#0070f3', fontSize: 14 }}>
                   查看詳情 →
                 </Link>
               </div>
@@ -85,5 +120,6 @@ export default function Overview() {
     </div>
   );
 }
+
 
 
