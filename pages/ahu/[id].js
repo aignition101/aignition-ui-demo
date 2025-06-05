@@ -18,15 +18,17 @@ export default function AhuDetail() {
   const speed = speedMap[id] || 0.5;
 
   const getStatus = (i) => {
-    if (id === 'AHU4' && i === 2) return '警告 - PCBA過熱 90°C';
-    return ['正常', '需注意', '異常'][i % 3];
-  };
+  if (id === 'AHU4' && i === 2) return '警告 - PCBA過熱 90°C';
+  if (id === 'AHU6' && i === 0) return '警告 - 溫度變化大';
+  return '正常';
+};
 
-  const getStatusColor = (status) => {
-    if (status.includes('正常')) return '#4caf50';
-    if (status.includes('警告') || status.includes('需注意')) return '#ff9800';
-    return '#f44336';
-  };
+ const getStatusColor = (status) => {
+  if (status.includes('正常')) return '#4caf50';
+  if (status.includes('警告') || status.includes('需注意')) return '#ff9800';
+  return '#f44336';
+};
+
 
   return (
     <div style={{ padding: 40, fontFamily: 'Arial' }}>
@@ -36,7 +38,7 @@ export default function AhuDetail() {
       {Array.from({ length: fanCount }).map((_, i) => {
         const rpm = Math.round(speed * 2480);
         const power = Math.round(speed * 4450);
-        const hours = Math.floor(800 + Math.random() * 5000);
+        const hours = id === 'AHU6' ? 125000 + i * 1000 : Math.floor(800 + Math.random() * 5000);
         const status = getStatus(i);
         const color = getStatusColor(status);
 
