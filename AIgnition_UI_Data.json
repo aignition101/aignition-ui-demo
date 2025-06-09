@@ -1,0 +1,45 @@
+{
+  "fan_spec": {
+    "model": "K3G450PA3103",
+    "rpm": 2480,
+    "power_watt": 4450,
+    "airflow_by_speed": {
+      "20%": 496,
+      "40%": 992,
+      "60%": 1488,
+      "80%": 1984
+    }
+  },
+  "ahu_units": [
+    {
+      "ahu_id": "AHU1",
+      "index": 1,
+      "fan_model": "K3G450PA3103"
+    },
+    {
+      "ahu_id": "AHU2",
+      "index": 2,
+      "fan_model": "K3G450PA3103"
+    },
+    {
+      "ahu_id": "AHU3",
+      "index": 3,
+      "fan_model": "K3G450PA3103"
+    },
+    {
+      "ahu_id": "AHU4",
+      "index": 4,
+      "fan_model": "K3G450PA3103"
+    },
+    {
+      "ahu_id": "AHU5",
+      "index": 5,
+      "fan_model": "K3G450PA3103"
+    },
+    {
+      "ahu_id": "AHU6",
+      "index": 6,
+      "fan_model": "K3G450PA3103"
+    }
+  ]
+}
