@@ -1,152 +1,89 @@
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
+// overview.js
 
-const INIT_DATA = [
-  { id: 'AHU1', speed: 0.51, airflow: 21010 },
-  { id: 'AHU2', speed: 0.62, airflow: 23121 },
-  { id: 'AHU3', speed: 0.59, airflow: 39781 },
-  { id: 'AHU4', speed: 0.63, airflow: 42123 },
-  { id: 'AHU5', speed: 0.69, airflow: 18612 },
-  { id: 'AHU6', speed: 0.75, airflow: 20125 },
+export const ahuOverviewData = [
+  {
+    id: 'AHU1', fans: 3, impedance: 7.008e-5,
+    speeds: [
+      { percent: '40%', rpm: 992, pressure: 282, flow: 6018, power: 1029 },
+      { percent: '60%', rpm: 1488, pressure: 635, flow: 9027, power: 3003 },
+      { percent: '80%', rpm: 1984, pressure: 1128, flow: 12036, power: 6786 },
+      { percent: '100%', rpm: 2473, pressure: 1745, flow: 15045, power: 12951 }
+    ],
+    initial: {
+      speedRatio: '51%', hours: 38126,
+      newFan: '無', warningFan: '無', warningReason: '無',
+      errorFan: '無', errorReason: '無'
+    }
+  },
+  {
+    id: 'AHU2', fans: 3, impedance: 9.518e-6,
+    speeds: [
+      { percent: '40%', rpm: 994, pressure: 160, flow: 12300, power: 1083 },
+      { percent: '60%', rpm: 1488, pressure: 359, flow: 18412.88, power: 3132 },
+      { percent: '80%', rpm: 1984, pressure: 637, flow: 24550.5, power: 7044 },
+      { percent: '99%', rpm: 2457, pressure: 990, flow: 30687, power: 13650 }
+    ],
+    initial: {
+      speedRatio: '59%', hours: 38298,
+      newFan: '無', warningFan: '無', warningReason: '無',
+      errorFan: '無', errorReason: '無'
+    }
+  },
+  {
+    id: 'AHU3', fans: 5, impedance: 1.818e-5,
+    speeds: [
+      { percent: '40%', rpm: 992, pressure: 212, flow: 17075, power: 1850 },
+      { percent: '60%', rpm: 1488, pressure: 477, flow: 25612.5, power: 5305 },
+      { percent: '80%', rpm: 1984, pressure: 848, flow: 34150, power: 12015 },
+      { percent: '99%', rpm: 2463, pressure: 1315, flow: 42690, power: 23205 }
+    ],
+    initial: {
+      speedRatio: '55%', hours: 56912,
+      newFan: '無', warningFan: '4號風機', warningReason: '功率模塊過溫',
+      errorFan: '無', errorReason: '無'
+    }
+  },
+  {
+    id: 'AHU4', fans: 5, impedance: 1.114e-5,
+    speeds: [
+      { percent: '40%', rpm: 992, pressure: 173, flow: 19700, power: 1835 },
+      { percent: '60%', rpm: 1488, pressure: 389, flow: 29550, power: 5325 },
+      { percent: '80%', rpm: 1984, pressure: 692, flow: 39400, power: 11960 },
+      { percent: '99%', rpm: 2453, pressure: 1070, flow: 49250, power: 23210 }
+    ],
+    initial: {
+      speedRatio: '57%', hours: 56938,
+      newFan: '2號風機', warningFan: '無', warningReason: '無',
+      errorFan: '無', errorReason: '無'
+    }
+  },
+  {
+    id: 'AHU5', fans: 2, impedance: 4.847e-6,
+    speeds: [
+      { percent: '40%', rpm: 992, pressure: 103, flow: 9220, power: 646 },
+      { percent: '60%', rpm: 1488, pressure: 232, flow: 13830, power: 1866 },
+      { percent: '80%', rpm: 1984, pressure: 412, flow: 18440, power: 4146 },
+      { percent: '100%', rpm: 2468, pressure: 685, flow: 23040, power: 8316 }
+    ],
+    initial: {
+      speedRatio: '66%', hours: 37951,
+      newFan: '無', warningFan: '無', warningReason: '無',
+      errorFan: '無', errorReason: '無'
+    }
+  },
+  {
+    id: 'AHU6', fans: 2, impedance: 2.954e-5,
+    speeds: [
+      { percent: '40%', rpm: 992, pressure: 245, flow: 5760, power: 728 },
+      { percent: '60%', rpm: 1488, pressure: 551, flow: 8640, power: 2138 },
+      { percent: '80%', rpm: 1984, pressure: 980, flow: 11520, power: 4828 },
+      { percent: '99%', rpm: 2460, pressure: 1510, flow: 14400, power: 9230 }
+    ],
+    initial: {
+      speedRatio: '59%', hours: 37966,
+      newFan: '1號風機', warningFan: '無', warningReason: '無',
+      errorFan: '無', errorReason: '無'
+    }
+  }
 ];
 
-const getFanWarnings = (id) => {
-  if (id === 'AHU4') return [null, null, '警告 - PCBA過熱 90°C'];
-  if (id === 'AHU6') return ['警告 - 溫度變化大', null];
-  return [];
-};
-
-const getStatusColor = (status) => {
-  if (status === '正常') return '#4caf50';
-  if (status === '需注意') return '#ff9800';
-  if (status === '故障') return '#f44336';
-  return '#ccc';
-};
-
-export default function Overview() {
-  const [ahuData, setAhuData] = useState(
-    INIT_DATA.map((item) => ({
-      ...item,
-      targetSpeed: item.speed,
-      displayedSpeed: item.speed,
-      temp: (Math.random() * 4 + 15).toFixed(1), // 15–19°C
-      fanWarnings: getFanWarnings(item.id),
-    }))
-  );
-
-  const animationRef = useRef();
-
-  useEffect(() => {
-    clearInterval(animationRef.current);
-    animationRef.current = setInterval(() => {
-      setAhuData((prev) =>
-        prev.map((ahu) => {
-          if (ahu.displayedSpeed === ahu.targetSpeed) return ahu;
-          const diff = ahu.targetSpeed - ahu.displayedSpeed;
-          const step = 0.01;
-          const nextSpeed =
-            Math.abs(diff) < step
-              ? ahu.targetSpeed
-              : ahu.displayedSpeed + (diff > 0 ? step : -step);
-          return { ...ahu, displayedSpeed: parseFloat(nextSpeed.toFixed(4)) };
-        })
-      );
-    }, 100);
-    return () => clearInterval(animationRef.current);
-  }, [ahuData]);
-
-  const updateSpeed = (index, newSpeed) => {
-    const updated = [...ahuData];
-    updated[index].targetSpeed = parseFloat(newSpeed);
-    updated[index].airflow = Math.round(updated[index].targetSpeed * 40000); // 模擬風量
-    setAhuData(updated);
-  };
-
-  return (
-    <div style={{ padding: 40 }}>
-      <h1>設備智能平台</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-        {ahuData.map((ahu, index) => {
-          const fanCount = ahu.fanWarnings.length || 3;
-          const airflow = ahu.airflow;
-          const speedPercent = Math.round(ahu.displayedSpeed * 100);
-          const power = Math.round(ahu.displayedSpeed * 4450 * fanCount);
-          const hasWarning = ahu.fanWarnings.some(w => w);
-          const status = hasWarning ? '需注意' : '正常';
-          const color = getStatusColor(status);
-
-          return (
-            <div key={ahu.id} style={{
-              width: 300,
-              border: '1px solid #ccc',
-              borderRadius: 8,
-              padding: 16,
-              backgroundColor: '#fdfdfd',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center'
-            }}>
-              <img src="/ahu-image.png" alt="ahu" style={{
-                width: '100%', height: 120, objectFit: 'cover',
-                borderRadius: 4, marginBottom: 8
-              }} />
-
-              <h3 style={{ marginBottom: 4 }}>{ahu.id}</h3>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{
-                  backgroundColor: color,
-                  color: '#fff',
-                  padding: '4px 12px',
-                  borderRadius: '16px',
-                  fontSize: '12px',
-                  fontWeight: 'bold'
-                }}>{status}</span>
-                <Link href={`/ahu/${ahu.id}`} style={{ fontSize: 14, color: '#0070f3' }}>
-                  查看詳情 →
-                </Link>
-              </div>
-
-              <p style={{ margin: '4px 0' }}>風量：{airflow} CMH</p>
-              <p style={{ margin: '4px 0' }}>出口風溫：{ahu.temp}°C</p>
-              <p style={{ margin: '4px 0' }}>功率：{power} W</p>
-              <p style={{ margin: '4px 0' }}>轉速比：{speedPercent}%</p>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={ahu.targetSpeed}
-                onChange={(e) => updateSpeed(index, e.target.value)}
-                style={{ width: '100%', marginBottom: 12 }}
-              />
-
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button disabled style={{
-                  padding: '6px 12px',
-                  borderRadius: 4,
-                  background: '#ddd',
-                  border: 'none',
-                  color: '#666'
-                }}>排程</button>
-                <button disabled style={{
-                  padding: '6px 12px',
-                  borderRadius: 4,
-                  background: '#ddd',
-                  border: 'none',
-                  color: '#666'
-                }}>維護保養</button>
-                <button disabled style={{
-                  padding: '6px 12px',
-                  borderRadius: 4,
-                  background: '#ddd',
-                  border: 'none',
-                  color: '#666'
-                }}>數據分析</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
